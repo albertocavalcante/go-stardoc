@@ -1,0 +1,9 @@
+Stardoc output protobuf schema
+===============================
+
+Source: https://github.com/bazelbuild/bazel
+File:   src/main/protobuf/stardoc_output.proto
+Commit: f24f48d7e7770526342d0cf2ab70d57d3d67e9e1
+
+Copyright 2019 The Bazel Authors. All rights reserved.
+Licensed under the Apache License, Version 2.0 (see LICENSE).

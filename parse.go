@@ -36,10 +36,11 @@ func ParseFile(path string) (*Module, error) {
 	return m, nil
 }
 
-// ParseAll parses all .md files in a directory as Stardoc output.
+// ParseAll parses all stardoc output files in a directory.
 // Only reads the immediate directory (non-recursive).
 //
-// Returns one [Module] per file, sorted by filename.
+// Supports both Markdown (.md) and protobuf (.pb, .binaryproto, .binpb) files.
+// Returns one [Module] per file, sorted by name.
 func ParseAll(dir string) ([]*Module, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -48,10 +49,21 @@ func ParseAll(dir string) ([]*Module, error) {
 
 	modules := make([]*Module, 0)
 	for _, e := range entries {
-		if e.IsDir() || filepath.Ext(e.Name()) != ".md" {
+		if e.IsDir() {
 			continue
 		}
-		m, err := ParseFile(filepath.Join(dir, e.Name()))
+		name := e.Name()
+		path := filepath.Join(dir, name)
+
+		var m *Module
+		switch {
+		case isProtoFile(name):
+			m, err = ParseProtoFile(path)
+		case filepath.Ext(name) == ".md":
+			m, err = ParseFile(path)
+		default:
+			continue
+		}
 		if err != nil {
 			return nil, err
 		}

@@ -1,0 +1,15 @@
+version: v2
+modules:
+  - path: ../third_party/bazelbuild/bazel
+    name: buf.build/albertocavalcante/go-stardoc
+lint:
+  use:
+    - STANDARD
+  except:
+    # Upstream proto uses these patterns; we can't change them.
+    - ENUM_VALUE_PREFIX
+    - PACKAGE_VERSION_SUFFIX
+    - FIELD_LOWER_SNAKE_CASE
+breaking:
+  use:
+    - WIRE_JSON
