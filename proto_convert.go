@@ -25,6 +25,14 @@ func moduleFromProto(info *pb.ModuleInfo) *Module {
 	for _, ai := range info.GetAspectInfo() {
 		m.Aspects = append(m.Aspects, aspectFromProto(ai))
 	}
+	// Macros are treated as rules (they have name, doc, attributes).
+	for _, mi := range info.GetMacroInfo() {
+		m.Rules = append(m.Rules, macroFromProto(mi))
+	}
+	// Repository rules are treated as rules.
+	for _, rri := range info.GetRepositoryRuleInfo() {
+		m.Rules = append(m.Rules, repoRuleFromProto(rri))
+	}
 
 	// Derive Name from File label if available.
 	if m.File != "" {
@@ -109,6 +117,32 @@ func functionFromProto(fi *pb.StarlarkFunctionInfo) Function {
 
 	f.Signature = f.Name + "(" + strings.Join(paramNames, ", ") + ")"
 	return f
+}
+
+func macroFromProto(mi *pb.MacroInfo) Rule {
+	r := Rule{
+		Name:      mi.GetMacroName(),
+		Doc:       mi.GetDocString(),
+		OriginKey: originKeyFromProto(mi.GetOriginKey()),
+	}
+	for _, ai := range mi.GetAttribute() {
+		r.Attributes = append(r.Attributes, attrFromProto(ai))
+	}
+	r.Signature = buildSignature(r.Name, r.Attributes)
+	return r
+}
+
+func repoRuleFromProto(rri *pb.RepositoryRuleInfo) Rule {
+	r := Rule{
+		Name:      rri.GetRuleName(),
+		Doc:       rri.GetDocString(),
+		OriginKey: originKeyFromProto(rri.GetOriginKey()),
+	}
+	for _, ai := range rri.GetAttribute() {
+		r.Attributes = append(r.Attributes, attrFromProto(ai))
+	}
+	r.Signature = buildSignature(r.Name, r.Attributes)
+	return r
 }
 
 func aspectFromProto(ai *pb.AspectInfo) Aspect {

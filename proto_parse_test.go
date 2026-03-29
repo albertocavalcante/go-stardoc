@@ -11,7 +11,7 @@ import (
 
 // testModuleInfo builds a realistic ModuleInfo protobuf for testing.
 func testModuleInfo() *pb.ModuleInfo {
-	return &pb.ModuleInfo{
+	info := &pb.ModuleInfo{
 		ModuleDocstring: "Core Go rules for Bazel.",
 		File:            "@rules_go//go:def.bzl",
 		RuleInfo: []*pb.RuleInfo{
@@ -116,6 +116,32 @@ func testModuleInfo() *pb.ModuleInfo {
 			},
 		},
 	}
+
+	// Add MacroInfo and RepositoryRuleInfo to test conversion of all message types.
+	info.MacroInfo = []*pb.MacroInfo{
+		{
+			MacroName: "go_repositories",
+			DocString: "Declare Go module dependencies.",
+			Attribute: []*pb.AttributeInfo{
+				{Name: "name", Type: pb.AttributeType_NAME, Mandatory: true},
+			},
+			OriginKey: &pb.OriginKey{Name: "go_repositories", File: "@rules_go//go:deps.bzl"},
+		},
+	}
+	info.RepositoryRuleInfo = []*pb.RepositoryRuleInfo{
+		{
+			RuleName:  "go_download_sdk",
+			DocString: "Download a Go SDK.",
+			Attribute: []*pb.AttributeInfo{
+				{Name: "name", Type: pb.AttributeType_NAME, Mandatory: true},
+				{Name: "version", Type: pb.AttributeType_STRING, DefaultValue: "latest"},
+			},
+			Environ:   []string{"GOPATH"},
+			OriginKey: &pb.OriginKey{Name: "go_download_sdk", File: "@rules_go//go:sdk.bzl"},
+		},
+	}
+
+	return info
 }
 
 func TestParseProto(t *testing.T) {
@@ -142,8 +168,9 @@ func TestParseProto(t *testing.T) {
 	}
 
 	// Rules
-	if len(m.Rules) != 2 {
-		t.Fatalf("expected 2 rules, got %d", len(m.Rules))
+	// 2 rules + 1 macro + 1 repo rule = 4
+	if len(m.Rules) != 4 {
+		t.Fatalf("expected 4 rules (2 rules + 1 macro + 1 repo rule), got %d", len(m.Rules))
 	}
 
 	goBinary := m.Rules[0]
@@ -270,8 +297,8 @@ func TestParseProtoFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(m.Rules) != 2 {
-		t.Errorf("expected 2 rules, got %d", len(m.Rules))
+	if len(m.Rules) != 4 {
+		t.Errorf("expected 4 rules (2 rules + 1 macro + 1 repo rule), got %d", len(m.Rules))
 	}
 }
 
