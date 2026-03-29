@@ -56,8 +56,8 @@ func ParseProtoReader(r io.Reader) (*Module, error) {
 	return ParseProto(data)
 }
 
-// isProtoFile reports whether a filename looks like a stardoc protobuf output.
-func isProtoFile(name string) bool {
+// IsProtoFile reports whether a filename looks like a stardoc protobuf output.
+func IsProtoFile(name string) bool {
 	ext := filepath.Ext(name)
 	return ext == ".pb" || ext == ".binaryproto" || ext == ".binpb"
 }

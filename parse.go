@@ -57,7 +57,7 @@ func ParseAll(dir string) ([]*Module, error) {
 
 		var m *Module
 		switch {
-		case isProtoFile(name):
+		case IsProtoFile(name):
 			m, err = ParseProtoFile(path)
 		case filepath.Ext(name) == ".md":
 			m, err = ParseFile(path)
