@@ -1,8 +1,10 @@
 package stardoc
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	pb "github.com/albertocavalcante/go-stardoc/gen"
@@ -407,6 +409,32 @@ func TestBuildSignature(t *testing.T) {
 		if got := buildSignature(tt.name, tt.attrs); got != tt.want {
 			t.Errorf("buildSignature(%q, %d attrs) = %q, want %q", tt.name, len(tt.attrs), got, tt.want)
 		}
+	}
+}
+
+func TestBuildSignature_ManyAttrs(t *testing.T) {
+	// 10K attributes should NOT allocate a 10K-element string.
+	attrs := make([]Attribute, 10000)
+	for i := range attrs {
+		attrs[i] = Attribute{Name: fmt.Sprintf("attr_%d", i)}
+	}
+	sig := buildSignature("big_rule", attrs)
+
+	// Should be truncated to first 5 + "..."
+	if !strings.HasSuffix(sig, ", ...)") {
+		t.Errorf("expected truncated signature, got %q", sig)
+	}
+	// Should contain first 5 attrs
+	if !strings.Contains(sig, "attr_0") || !strings.Contains(sig, "attr_4") {
+		t.Errorf("missing first 5 attrs in %q", sig)
+	}
+	// Should NOT contain attr_5
+	if strings.Contains(sig, "attr_5") {
+		t.Errorf("should not contain attr_5 after truncation: %q", sig)
+	}
+	// Signature should be reasonable length
+	if len(sig) > 200 {
+		t.Errorf("signature too long: %d bytes", len(sig))
 	}
 }
 

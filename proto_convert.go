@@ -183,28 +183,27 @@ func originKeyFromProto(ok *pb.OriginKey) *OriginKey {
 
 // buildSignature creates a synthetic call signature from a name and attributes.
 // e.g., "go_binary(name, deps, srcs, ...)" for rules with many attributes.
+const maxSigAttrs = 5
+
 func buildSignature(name string, attrs []Attribute) string {
 	if len(attrs) == 0 {
 		return name + "()"
 	}
 
-	var names []string
-	for _, a := range attrs {
-		names = append(names, a.Name)
-	}
-
-	sig := name + "(" + strings.Join(names, ", ") + ")"
-
-	// If the signature is very long, truncate to first few attrs.
-	if len(sig) > 120 && len(attrs) > 5 {
-		short := make([]string, 5)
-		for i := range 5 {
+	// Truncate early to avoid allocating for large attribute lists.
+	if len(attrs) > maxSigAttrs {
+		short := make([]string, maxSigAttrs)
+		for i := range maxSigAttrs {
 			short[i] = attrs[i].Name
 		}
-		sig = name + "(" + strings.Join(short, ", ") + ", ...)"
+		return name + "(" + strings.Join(short, ", ") + ", ...)"
 	}
 
-	return sig
+	names := make([]string, len(attrs))
+	for i, a := range attrs {
+		names[i] = a.Name
+	}
+	return name + "(" + strings.Join(names, ", ") + ")"
 }
 
 // nameFromFileLabel extracts a short name from a Bazel file label.
